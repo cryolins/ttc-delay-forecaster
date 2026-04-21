@@ -1,0 +1,15 @@
+# env and venv
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# data sources (temp)
+data/
+
+# model (temp)
+models/*.pkl
+
+# notebooks if needed
+.ipynb_checkpoints/
