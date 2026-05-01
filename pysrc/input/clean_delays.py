@@ -4,7 +4,7 @@ from pathlib import Path
 
 # this file takes in raw bus delay data and cleans it into a csv
 
-DATA_DIR_PATH = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 
 # read bus delay data files
 START_YEAR = 2020
@@ -43,6 +43,35 @@ delay_df["Time"] = time1.combine_first(time2).dt.time
 
 # remove null values
 delay_df.dropna(inplace=True)
+
+# categorize incident types
+inc_conds = [
+    delay_df["Incident"].str.lower().str.contains("late"),
+    delay_df["Incident"].str.lower().str.contains("mechanical"),
+    delay_df["Incident"].str.lower().str.contains("operat"),
+    delay_df["Incident"].str.lower().str.contains("securit"),
+    delay_df["Incident"].str.lower().str.contains("block"),
+    delay_df["Incident"].str.lower().str.contains("collision"),
+    delay_df["Incident"].str.lower().str.contains("diversion"),
+    delay_df["Incident"].str.lower().str.contains("off route"),
+    delay_df["Incident"].str.lower().str.contains("emergency services"),
+    delay_df["Incident"].str.lower().str.contains("cleaning"),
+    delay_df["Incident"].str.lower().str.contains("vision"),
+]
+inc_choices = [
+    "late exit",
+    "mechanical",
+    "operations",
+    "security",
+    "road blocked",
+    "collision",
+    "diversion",
+    "off route",
+    "emergency services",
+    "cleaning",
+    "vision"
+]
+delay_df["Incident"] = np.select(inc_conds, inc_conds, default="general")
 
 # convert select columns to integers
 delay_df["Route"] = delay_df["Route"].astype("int64")

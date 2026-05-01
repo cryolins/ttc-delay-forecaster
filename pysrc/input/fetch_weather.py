@@ -8,7 +8,7 @@ WEATHER_COORDS = [43.711158, -79.377118] # eglinton / bayview, approximately cen
 START_DATE = "2020-01-01"
 END_DATE = "2024-12-31"
 OPEN_METEO_URL = "https://archive-api.open-meteo.com/v1/archive"
-DATA_DIR_PATH = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 
 params = {
         "latitude": WEATHER_COORDS[0],

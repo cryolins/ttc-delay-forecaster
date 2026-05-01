@@ -5,7 +5,7 @@ from sklearn.metrics.pairwise import haversine_distances
 
 # this file takes in a cleaned bus delay data csv and gtfs csvs to attach all required features
 
-DATA_DIR_PATH = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 
 delay_df = pd.read_csv(DATA_DIR_PATH / "bus-delay-cleaned.csv")
 routes_df = pd.read_csv(DATA_DIR_PATH / "routes.csv")
