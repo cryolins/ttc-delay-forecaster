@@ -33,7 +33,9 @@ dir_choices = ["N", "E", "S", "W"]
 delay_df["Direction"] = np.select(dir_conds, dir_choices, default="B")
 
 # drop unnecessary columns
-delay_df.drop(columns=["Report Date", "Delay", "Gap", "Location", "Vehicle", "Line", "Bound", "Unnamed: 10"], inplace=True)
+delay_df.drop(columns=["Min Gap", "Report Date", "Delay", "Gap", "Location", "Vehicle", "Line", "Bound", "Unnamed: 10"], inplace=True)
+# min gap seems to be highly correlated to min delay (the gap is likely describing the gap caused by the delay)
+# so we remove it
 
 # convert select columns to correct types
 delay_df["Route"] = pd.to_numeric(delay_df["Route"], errors="coerce")
@@ -76,7 +78,6 @@ delay_df["Incident"] = np.select(inc_conds, inc_conds, default="general")
 # convert select columns to integers
 delay_df["Route"] = delay_df["Route"].astype("int64")
 delay_df["Min Delay"] = delay_df["Min Delay"].astype("int64")
-delay_df["Min Gap"] = delay_df["Min Gap"].astype("int64")
 
 # output to cleaned csv
 delay_df.info()

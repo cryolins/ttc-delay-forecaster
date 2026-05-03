@@ -57,7 +57,6 @@ df = (
         "Direction": "direction",
         "Date": "date",
         "Min Delay": "min_delay",
-        "Min Gap": "min_gap"
     })
 )
 df.info()
