@@ -1,3 +1,4 @@
+import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression
@@ -23,10 +24,12 @@ baseline_pipeline = Pipeline(steps=[
 
 # split into datasets based on time (test on later dataset)
 train, test, X_train, y_train, X_test, y_test = split_data(baseline_df, False)
+y_train_log= np.log1p(y_train)
 
 # run model
-baseline_pipeline.fit(X_train, y_train)
-y_pred = baseline_pipeline.predict(X_test)
+baseline_pipeline.fit(X_train, y_train_log)
+y_pred_log = baseline_pipeline.predict(X_test)
+y_pred = np.expm1(y_pred_log)
 
 metrics = compute_metrics(y_test, y_pred)
 save_metrics(metrics, "baseline-metrics")
