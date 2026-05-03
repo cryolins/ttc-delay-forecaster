@@ -9,9 +9,6 @@ df = common_preprocess(load_data())
 # split into datasets
 train, val, test, X_train, y_train, X_val, y_val, X_test, y_test = split_data(df)
 
-y_train_log= np.log1p(y_train)
-y_val_log= np.log1p(y_val)
-
 xgb = XGBRegressor(
     # basic hyperparameters to get something hopefully decent
     n_estimators=800, # high allows for xgb early stopping if needed
@@ -33,16 +30,15 @@ xgb = XGBRegressor(
 
 print("XGB Fitting Process:")
 xgb.fit(
-    X_train, y_train_log,
-    eval_set=[(X_val, y_val_log)],
+    X_train, y_train,
+    eval_set=[(X_val, y_val)],
     verbose=50
 )
 
 print(f"Best iteration: {xgb.best_iteration}")
 
 # doing the test
-y_pred_log = xgb.predict(X_test)
-y_pred = np.expm1(y_pred_log)
+y_pred = xgb.predict(X_test)
 
 metrics = compute_metrics(y_test, y_pred)
 save_metrics(metrics, "xgb-default-metrics")

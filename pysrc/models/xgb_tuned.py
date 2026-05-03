@@ -9,9 +9,6 @@ DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 df = common_preprocess(load_data())
 train, val, test, X_train, y_train, X_val, y_val, X_test, y_test = split_data(df)
 
-y_train_log= np.log1p(y_train)
-y_val_log= np.log1p(y_val)
-
 param_grid = {
     "max_depth": [3, 4, 5, 6, 7],
     "learning_rate": [0.03, 0.05, 0.075, 0.1],
@@ -34,12 +31,12 @@ search = RandomizedSearchCV(
     n_iter=150,
     scoring="neg_mean_absolute_error",
     cv=tscv,
-    verbose=3,
+    verbose=2,
     random_state=42,
     n_jobs=-1
 )
 
-search.fit(X_train, y_train_log, eval_set=[(X_val, y_val_log)], verbose=0)
+search.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=0)
 print("Best parameters:")
 print(search.best_params_.items())
 print(search.best_score_)
@@ -55,17 +52,15 @@ best_xgb = XGBRegressor(
 )
 
 best_xgb.fit(
-    X_train, y_train_log,
-    eval_set=[(X_val, y_val_log)],
+    X_train, y_train,
+    eval_set=[(X_val, y_val)],
     verbose=50
 )
 
 print(f"Best iteration: {best_xgb.best_iteration}")
 
 # doing the test
-y_pred_log = best_xgb.predict(X_test)
-y_pred = np.expm1(y_pred_log)
-
+y_pred = best_xgb.predict(X_test)
 
 metrics = compute_metrics(y_test, y_pred)
 save_metrics(metrics, "xgb-tuned-metrics")
@@ -74,4 +69,4 @@ print(metrics)
 visualize_key_features(best_xgb, "xgb-tuned-features")
 visualize_preds(test, y_test, y_pred, "xgb-tuned-eval")
 
-joblib.dump(best_xgb, "delay_model_v2.pkl")
+joblib.dump(best_xgb, "delay_model_v3_1h.pkl")

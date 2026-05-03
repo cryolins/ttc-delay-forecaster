@@ -75,6 +75,9 @@ inc_choices = [
 ]
 delay_df["Incident"] = np.select(inc_conds, inc_conds, default="general")
 
+# remove delays above 1h as they are more extreme circumstances the model is not expected to predict
+delay_df = delay_df[delay_df["Min Delay"] <= 60]
+
 # convert select columns to integers
 delay_df["Route"] = delay_df["Route"].astype("int64")
 delay_df["Min Delay"] = delay_df["Min Delay"].astype("int64")
