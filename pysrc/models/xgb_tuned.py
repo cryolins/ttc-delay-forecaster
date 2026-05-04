@@ -1,7 +1,7 @@
 import numpy as np
 from pathlib import Path
 from xgboost import XGBRegressor
-from cust_model_utils import load_data, common_preprocess, split_data, compute_metrics, save_metrics, visualize_preds, visualize_key_features
+from cust_model_utils import load_data, common_preprocess, split_data, compute_metrics, save_metrics, visualize_preds, visualize_key_features, ohe_preprocessor
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 import joblib
 
@@ -22,10 +22,8 @@ tscv = TimeSeriesSplit(n_splits=5) # time series cross validation
 
 search = RandomizedSearchCV(
     estimator=XGBRegressor(
-        n_estimators=800,
-        early_stopping_rounds=50,
+        n_estimators=350,
         random_state=42, 
-        n_jobs=-1, 
     ),
     param_distributions=param_grid,
     n_iter=150,
@@ -36,7 +34,7 @@ search = RandomizedSearchCV(
     n_jobs=-1
 )
 
-search.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=0)
+search.fit(X_train, y_train, verbose=0)
 print("Best parameters:")
 print(search.best_params_.items())
 print(search.best_score_)
@@ -69,4 +67,4 @@ print(metrics)
 visualize_key_features(best_xgb, "xgb-tuned-features")
 visualize_preds(test, y_test, y_pred, "xgb-tuned-eval")
 
-joblib.dump(best_xgb, "delay_model_v3_1h.pkl")
+joblib.dump(best_xgb, "delay_model_v3-1_1h.pkl")

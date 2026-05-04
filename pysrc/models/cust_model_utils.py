@@ -4,19 +4,25 @@ import numpy as np
 import json
 import matplotlib.pyplot as plt
 from xgboost import XGBRegressor
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.compose import ColumnTransformer
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 
 DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 RESULTS_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "model-results"
 
-NUM_FEATURES = ["route_stops", "route_length", "dt_dist_mean", "dt_dist_std", 
+NUM_FEATURES = ["route", "route_stops", "route_length", "dt_dist_mean", "dt_dist_std", 
                 "temperature_2m", "precipitation", "snowfall", "windspeed_10m",
                 "is_weekend", "is_rush_hour", "is_holiday", 
                 "day_sin", "day_cos", "hour_sin", "hour_cos", "month_sin", "month_cos"]
 CYC_FEATURES = ["day", "hour", "month"]
 CYC_MAXES = [7, 24, 12]
-CAT_FEATURES = ["route", "incident_type", "direction", "weather_category"]
+CAT_FEATURES = ["incident_type", "direction", "weather_category"]
+
+ohe_preprocessor = ColumnTransformer(transformers=[
+    ("num", "passthrough", NUM_FEATURES),
+    ("cat", OneHotEncoder(handle_unknown="ignore"), CAT_FEATURES)
+])
 
 def load_data():
     df = (
@@ -41,13 +47,16 @@ def common_preprocess(df: pd.DataFrame):
     def encode_str_cat(df: pd.DataFrame, col):
         le = LabelEncoder()
         df[col] = le.fit_transform(df[col])
+
+        # alternative version: use category type
+        # df[col] = df[col].astype("category")
         return df
 
     for i in range(len(CYC_FEATURES)):
         df = encode_cyclic(df, CYC_FEATURES[i], CYC_MAXES[i])
 
-    for i in range(1, len(CAT_FEATURES)):
-        df = encode_str_cat(df, CAT_FEATURES[i])
+    for cat_feat in CAT_FEATURES:
+        df = encode_str_cat(df, cat_feat)
 
     return df
 
@@ -55,7 +64,6 @@ def target_encode_route(df: pd.DataFrame):
     route_means = df.groupby("route")["min_delay"].mean()
     df["route"] = df["route"].map(route_means)
     return df
-
 
 def split_data(df: pd.DataFrame, incl_val=True, encode_route=True):
     if not incl_val:

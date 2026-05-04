@@ -1,10 +1,8 @@
 import numpy as np
 from pathlib import Path
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
-from cust_model_utils import load_data, common_preprocess, split_data, compute_metrics, save_metrics, visualize_preds, NUM_FEATURES, CAT_FEATURES
+from cust_model_utils import load_data, common_preprocess, split_data, compute_metrics, save_metrics, visualize_preds, ohe_preprocessor
 
 DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 baseline_df = common_preprocess(load_data())
@@ -13,12 +11,8 @@ baseline_df = common_preprocess(load_data())
 # baseline model: linear regressor
 #----------------
 # building pipeline with one-hot
-preprocessor = ColumnTransformer(transformers=[
-    ("num", "passthrough", NUM_FEATURES),
-    ("cat", OneHotEncoder(handle_unknown="ignore"), CAT_FEATURES)
-])
 baseline_pipeline = Pipeline(steps=[
-    ("preprocessor", preprocessor),
+    ("preprocessor", ohe_preprocessor),
     ("model", LinearRegression())
 ])
 

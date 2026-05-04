@@ -1,6 +1,5 @@
 from pathlib import Path
 from xgboost import XGBRegressor
-import numpy as np
 from cust_model_utils import load_data, common_preprocess, split_data, compute_metrics, save_metrics, visualize_preds, visualize_key_features
 
 DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
