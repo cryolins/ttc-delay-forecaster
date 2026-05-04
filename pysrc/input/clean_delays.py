@@ -73,7 +73,7 @@ inc_choices = [
     "cleaning",
     "vision"
 ]
-delay_df["Incident"] = np.select(inc_conds, inc_conds, default="general")
+delay_df["Incident"] = np.select(inc_conds, inc_choices, default="general")
 
 # remove delays above 1h as they are more extreme circumstances the model is not expected to predict
 delay_df = delay_df[delay_df["Min Delay"] <= 60]
