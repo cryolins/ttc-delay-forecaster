@@ -18,6 +18,7 @@ NUM_FEATURES = ["route", "route_stops", "route_length", "dt_dist_mean", "dt_dist
 CYC_FEATURES = ["day", "hour", "month"]
 CYC_MAXES = [7, 24, 12]
 CAT_FEATURES = ["incident_type", "direction", "weather_category"]
+FEATURES = NUM_FEATURES + CAT_FEATURES
 
 ohe_preprocessor = ColumnTransformer(transformers=[
     ("num", "passthrough", NUM_FEATURES),
@@ -138,10 +139,9 @@ def visualize_preds(test: pd.DataFrame, y_test, y_pred, img_name = None):
         plt.show()
 
 def visualize_key_features(xgb_model: XGBRegressor, img_name):
-    features = NUM_FEATURES + CAT_FEATURES
     importances = pd.Series(
     xgb_model.feature_importances_,
-        index=features
+        index=FEATURES
     ).sort_values(ascending=True)
 
     fig, ax = plt.subplots(figsize=(8, 6))

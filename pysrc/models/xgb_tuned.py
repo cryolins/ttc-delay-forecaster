@@ -9,6 +9,10 @@ DATA_DIR_PATH = Path(__file__).resolve().parent.parent.parent / "data"
 df = common_preprocess(load_data())
 train, val, test, X_train, y_train, X_val, y_val, X_test, y_test = split_data(df)
 
+feature_cols = X_train.columns.to_list()
+print(feature_cols)
+joblib.dump(feature_cols, "feature_cols.pkl")
+
 param_grid = {
     "max_depth": [3, 4, 5, 6, 7],
     "learning_rate": [0.03, 0.05, 0.075, 0.1],
