@@ -36,9 +36,9 @@ class IncidentEnum(Enum):
 class AdvancedPredictParams(BaseModel):
     incident_type: IncidentEnum
     weather_category: WeatherEnum
-    temperature: float = Field(ge=-40, le=40)
+    temperature_2m: float = Field(ge=-40, le=40)
     precipitation: float = Field(ge=0)
-    wind_speed: float = Field(ge=0)
+    windspeed_10m: float = Field(ge=0)
     snowfall: float = Field(ge=0)
 
 class PredictRequest(BaseModel):
@@ -51,7 +51,9 @@ class PredictResponse(BaseModel):
     route: int
     timestamp: datetime
     direction: Optional[DirectionEnum] # None means took weighted average
-    predicted_delay: int
+    predicted_delay: float
+    route_avg_delay: float
+    route_entries: int
     weather_category: WeatherEnum
     temperature: float
     precipitation: float

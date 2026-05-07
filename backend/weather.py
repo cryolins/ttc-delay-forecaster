@@ -1,7 +1,7 @@
 import httpx
 import pandas as pd
 from datetime import datetime
-from schemas import PredictRequest
+from zoneinfo import ZoneInfo
 
 WEATHER_COORDS = [43.711158, -79.377118] # eglinton / bayview, approximately centre of city
 HIST_METEO_URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -26,12 +26,12 @@ def bucket_wcs(wc: int):
     else:
         return "mixed"
 
-async def weather_from_req(req: PredictRequest):
+async def weather_from_dt(timestamp: datetime):
     params = {
         "latitude": WEATHER_COORDS[0],
         "longitude": WEATHER_COORDS[1],
-        "start_date": req.timestamp.strftime("%Y-%m-%d"),
-        "end_date":  req.timestamp.strftime("%Y-%m-%d"),
+        "start_date": timestamp.strftime("%Y-%m-%d"),
+        "end_date":  timestamp.strftime("%Y-%m-%d"),
         "hourly": [
             "temperature_2m",
             "precipitation",
@@ -42,11 +42,12 @@ async def weather_from_req(req: PredictRequest):
         "timezone": "America/Toronto"
     }
 
-    # api route should already prevent overly old or new dates, 
-    # so just calculate if using historical or forecast
-    now = datetime.now()
+    # prevent overly old or new dates, and calculate if using historical or forecast
+    now = datetime.now(ZoneInfo("America/Toronto"))
     weather_url = FORE_METEO_URL
-    if ((now - req.timestamp).days > 14):
+    if (timestamp.year < 2000 or (now - timestamp).days < -14):
+        raise ValueError(f"Invalid date {timestamp}. Only accepts up to 14 days (336h) ahead and back to 2000")
+    if ((now - timestamp).days > 14):
         # if older than 2 weeks we should be able to call archive
         weather_url = HIST_METEO_URL
 
@@ -66,8 +67,9 @@ async def weather_from_req(req: PredictRequest):
     df.drop(columns="weather_code", inplace=True)
 
     # match the hour and return
-    hour_row = df[df["datetime"].dt.hour == req.timestamp.hour]
+    hour_row = df[df["datetime"].dt.hour == timestamp.hour]
     if (len(hour_row) == 0):
-        raise ValueError(f"Hour {req.timestamp.hour} not found in Open-Meteo response.")
+        raise ValueError(f"Hour {timestamp.hour} not found in Open-Meteo response.")
+    hour_row.drop(columns="datetime", inplace=True)
     hour_row_dict = hour_row.to_dict(orient="records")[0]
     return hour_row_dict

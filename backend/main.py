@@ -1,0 +1,135 @@
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
+from zoneinfo import ZoneInfo
+
+from schemas import PredictRequest, PredictResponse
+import model_loader
+import data_loader
+from backend_utils import get_time_features, preprocess
+from weather import weather_from_dt
+
+# load model and route info on start up via lifespan
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # on startup actions
+    model_loader.load_model()
+    data_loader.load_data()
+    yield
+    # on shutdown actions (none as of now)
+
+app = FastAPI(title="TTC Delay Forecaster", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # TODO: fill with production origin before deploying
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health")
+def health():
+    return { "status": "ok", "model_loaded": model_loader.model is not None }
+
+@app.post("/predict", response_model=PredictResponse)
+async def predict(req: PredictRequest):
+    # ensure module resources are available
+    if not (data_loader.route_dirs and data_loader.route_encodings and data_loader.route_incidents and data_loader.route_info):
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Route data has not been loaded")
+    if model_loader.model is None or model_loader.feature_cols is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Model has not been loaded")
+    
+    # check if valid route
+    if req.route not in data_loader.route_info:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid bus route: {req.route}")
+
+    # enforce timezone
+    tz_timestamp = req.timestamp.replace(tzinfo=ZoneInfo("America/Toronto"))
+
+    # start up a dataframe with static route info and datetime
+    this_route_info = data_loader.route_info.get(req.route)
+    this_route_info.update({"route": req.route, "datetime": tz_timestamp})
+    df = pd.DataFrame(this_route_info, index=[0])
+    df = get_time_features(df, tz_timestamp.year)
+
+    # processing advanced vs basic request features
+    adv_options = req.advanced
+    if adv_options is not None:
+        # advanced options, so we can add them to the dataframe
+        adv_dict = adv_options.model_dump()
+        df = pd.concat([df, pd.DataFrame(adv_dict, index=[0])], axis=1)
+
+        # turn enums into their values and add full weight for specified incident
+        df["weather_category"] = df["weather_category"].apply(lambda enum: enum.value)
+        df["incident_type"] = df["incident_type"].apply(lambda enum: enum.value)
+        df["incident_weight"] = 1
+    else:
+        # otherwise we must fetch weather
+        try:
+            weather_dict = await weather_from_dt(tz_timestamp)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Bad request (weather API call issue) {e}")
+        
+        df["incident_info"] = [data_loader.route_incidents.get(req.route)] * len(df) # a list of [type, weight] pairs
+        df: pd.DataFrame = pd.concat([df, pd.DataFrame(weather_dict, index=[0])], axis=1)
+
+        # explode upon the list of incidents and expand it into two cols
+        df = df.explode("incident_info", ignore_index=True)
+        df[["incident_type", "incident_weight"]] = pd.DataFrame(df["incident_info"].to_list(), index=df.index)
+
+    # get direction
+    if req.direction is not None:
+        df["direction"] = req.direction.value # same for all rows
+        df["direction_weight"] = 1
+    else:
+        # get directions per route and convert to [direction, weight], similar to with incidents above
+        dirs_list = data_loader.route_dirs.get(req.route)
+        dirs_sum = sum([count for d,count in dirs_list])
+        dirs_weights_list = [[d, count / dirs_sum] for d,count in dirs_list]
+
+        # add direction columns and explode + expand to two columns
+        df["direction_info"] = [dirs_weights_list] * len(df)
+        df = df.explode("direction_info", ignore_index=True)
+        df[["direction", "direction_weight"]] = pd.DataFrame(df["direction_info"].to_list(), index=df.index)
+
+    # now we can preprocess the df since we have all the required info
+    features = df.copy()
+    features = preprocess(features, model_loader.encoders)
+    target_encoding = data_loader.route_encodings.get(req.route)
+    features["route"] = target_encoding # do target encoding
+    features = features[model_loader.feature_cols] # extract only needed columns in order
+
+    # logging test
+    # df.info()
+    # features.info()
+
+    # get prediction
+    try:
+        preds = model_loader.model.predict(features)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+    
+    # calculate weighted average
+    df["prediction"] = preds
+    df["weighted_prediction"] = df["prediction"] * df["incident_weight"] * df["direction_weight"]
+    weighted_avg_pred = df["weighted_prediction"].sum()
+
+    # get total count of entries in top 3 directions
+    dirs_list = data_loader.route_dirs.get(req.route)
+    dirs_sum = sum([count for d,count in dirs_list])
+
+    # return respnose
+    return PredictResponse(
+        route=req.route,
+        timestamp=tz_timestamp,
+        direction=req.direction,
+        predicted_delay=weighted_avg_pred,
+        route_avg_delay=target_encoding,
+        route_entries=dirs_sum,
+        weather_category=df["weather_category"].iloc[0],
+        temperature=df["temperature_2m"].iloc[0],
+        precipitation=df["precipitation"].iloc[0],
+        input_advanced=adv_options is not None
+    )
+    
