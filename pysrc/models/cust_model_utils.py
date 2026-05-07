@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import json
+import joblib
 import matplotlib.pyplot as plt
 from xgboost import XGBRegressor
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
@@ -48,6 +49,7 @@ def common_preprocess(df: pd.DataFrame):
     def encode_str_cat(df: pd.DataFrame, col):
         le = LabelEncoder()
         df[col] = le.fit_transform(df[col])
+        joblib.dump(le, f"{col}_label_enc.pkl")
 
         # alternative version: use category type
         # df[col] = df[col].astype("category")
