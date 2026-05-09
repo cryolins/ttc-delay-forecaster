@@ -47,6 +47,7 @@ function ParamInput() {
         if (resJson.status === "error") {
           setErrorMsg(resJson.message);
           console.error(res);
+          console.log(errorMsg);
           setIsFetching(false);
           return;
         }
