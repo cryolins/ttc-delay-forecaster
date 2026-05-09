@@ -1,0 +1,100 @@
+.inputs-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  @media (width >= 40rem) {
+    width: clamp(80%, 780px, 100%)
+  }
+}
+
+.input-set {
+  /* a set of inputs, ex. all basic inputs, either a row on desktop or column on mobile */
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (width < 40rem) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+    width: 100%;
+  }
+}
+
+#route-select-container {
+  width: 100%;
+  @media (width >= 40rem) {
+    width: clamp(10rem, 20rem, 100%);
+    flex-grow: 1;
+  }
+}
+
+#direction-select-container {
+  width: 100%;
+  @media (width >= 40rem) {
+    width: clamp(8rem, 8rem, 100%);  
+  } 
+}
+
+#route-select, #direction-select {
+  width: 100%;
+}
+
+.param-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  @media (width < 40rem) {
+    width: 100%;
+  }
+}
+
+select, input {
+  height: 2rem;
+  border: 1px solid black;
+  border-radius: 0.5rem;
+  background-color: white;
+  padding: 0.25rem;
+  width: auto;
+  font-size: 1rem;
+
+  @media (width < 40rem) {
+    width: 100%;
+  }
+}
+
+.select-route-icon {
+  padding: 0.25rem;
+  width: fit-content;
+  background-color: var(--route-normal);
+  border-radius: 0.25rem;
+  color: white;
+}
+
+.option-frame {
+  background-color: white;
+  color: black;
+  transition: color 150ms ease;
+}
+
+.delay-submit {
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: black;
+  color: white;
+  padding-inline: 0.5rem;
+  padding-block: 0.25rem;
+  width: auto;
+  font-size: 1rem;
+  transition: color 250ms ease-in-out;
+  margin-top: 0.625rem;
+}
+.delay-submit:hover {
+  background-color: #393939;
+}
+.delay-submit:disabled {
+  background-color: #7f7f7f;
+}

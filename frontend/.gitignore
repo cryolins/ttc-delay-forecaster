@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# where the default template is kept
+src/components/vite-app/ 
