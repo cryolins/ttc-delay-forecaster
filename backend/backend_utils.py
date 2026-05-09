@@ -24,14 +24,13 @@ def get_time_features(df: pd.DataFrame, holiday_year: int):
     return df
 
 # same preprocessing step as used in model training for cyclic and label encoding
-def preprocess(df: pd.DataFrame, encoders: dict):
+def preprocess(df: pd.DataFrame):
     def encode_cyclic(df: pd.DataFrame, col, max_val):
         df[f"{col}_sin"] = np.sin(2 * np.pi * df[col] / max_val)
         df[f"{col}_cos"] = np.cos(2 * np.pi * df[col] / max_val)
         return df.drop(columns=col)
     def encode_str_cat(df: pd.DataFrame, col: str):
-        le = encoders.get(col)
-        df[col] = le.transform(df[col])
+        df[col] = df[col].astype("category")
         return df
 
     for i in range(len(CYC_FEATURES)):

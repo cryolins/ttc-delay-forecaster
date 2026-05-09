@@ -24,7 +24,8 @@ xgb = XGBRegressor(
     # parameters for running the model
     random_state=42,
     n_jobs=-1,
-    verbosity=1
+    verbosity=1,
+    enable_categorical=True
 )
 
 print("XGB Fitting Process:")

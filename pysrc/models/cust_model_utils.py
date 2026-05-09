@@ -47,12 +47,12 @@ def common_preprocess(df: pd.DataFrame):
         df[f"{col}_cos"] = np.cos(2 * np.pi * df[col] / max_val)
         return df.drop(columns=col)
     def encode_str_cat(df: pd.DataFrame, col):
-        le = LabelEncoder()
-        df[col] = le.fit_transform(df[col])
-        joblib.dump(le, f"{col}_label_enc.pkl")
+        #le = LabelEncoder()
+        #df[col] = le.fit_transform(df[col])
+        #joblib.dump(le, f"{col}_label_enc.pkl")
 
-        # alternative version: use category type
-        # df[col] = df[col].astype("category")
+        # alternative version: use category type: FOR XGBOOST MODELS ONLY
+        df[col] = df[col].astype("category")
         return df
 
     for i in range(len(CYC_FEATURES)):

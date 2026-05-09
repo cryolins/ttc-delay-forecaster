@@ -112,7 +112,7 @@ async def predict(req: PredictRequest):
 
     # now we can preprocess the df since we have all the required info
     features = df.copy()
-    features = preprocess(features, model_loader.encoders)
+    features = preprocess(features)
     target_encoding = data_loader.route_encodings.get(req.route)
     features["route"] = target_encoding # do target encoding
     features = features[model_loader.feature_cols] # extract only needed columns in order
