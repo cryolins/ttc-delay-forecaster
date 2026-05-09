@@ -8,4 +8,3 @@ joblib
 pydantic
 dotenv
 xgboost
-scikit-learn
