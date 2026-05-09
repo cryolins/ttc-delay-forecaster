@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, Literal
 
 class DirectionEnum(Enum):
     N = "N"
@@ -58,3 +58,7 @@ class PredictResponse(BaseModel):
     temperature: float
     precipitation: float
     input_advanced: bool # was input given in advanced mode (based on if optional fields are filled)
+
+class WrappedPredictResponse(BaseModel):
+    status: Literal["success", "error"]
+    content: PredictResponse
