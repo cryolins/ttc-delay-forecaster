@@ -5,12 +5,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 import pandas as pd
 from zoneinfo import ZoneInfo
+from dotenv import load_dotenv
+import os
 
 from schemas import PredictRequest, PredictResponse, WrappedPredictResponse
 import model_loader
 import data_loader
 from backend_utils import get_time_features, preprocess
 from weather import weather_from_dt
+
+# get env variable
+load_dotenv()
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 # load model and route info on start up via lifespan
 @asynccontextmanager
@@ -25,7 +31,7 @@ app = FastAPI(title="TTC Delay Forecaster", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: fill with production origin before deploying
+    allow_origins=[FRONTEND_URL],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -38,6 +44,10 @@ async def base_orbital_error_handler(request: Request, exc: HTTPException) -> JS
         status_code=exc.status_code,
         content={ "status": "error", "message": exc.detail },
     )
+
+@app.get("/health")
+def health():
+    return { "status": "ok", "model_loaded": model_loader.model is not None }
 
 @app.post("/predict", response_model=WrappedPredictResponse)
 async def predict(req: PredictRequest):

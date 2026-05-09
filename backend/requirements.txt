@@ -6,3 +6,6 @@ numpy
 holidays
 joblib
 pydantic
+dotenv
+xgboost
+scikit-learn
