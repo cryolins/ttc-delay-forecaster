@@ -54,7 +54,7 @@
 
 select, input {
   height: 2rem;
-  border: 1px solid black;
+  border: 1px solid #171717;
   border-radius: 0.5rem;
   background-color: white;
   padding: 0.25rem;
@@ -76,14 +76,14 @@ select, input {
 
 .option-frame {
   background-color: white;
-  color: black;
-  transition: color 150ms ease;
+  color: #171717;
+  transition: color 250ms ease-in-out;
 }
 
 .delay-submit {
   height: 2rem;
   border-radius: 0.5rem;
-  background-color: black;
+  background-color: #171717;
   color: white;
   padding-inline: 0.5rem;
   padding-block: 0.25rem;

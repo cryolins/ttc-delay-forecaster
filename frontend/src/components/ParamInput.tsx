@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { type APIResponseData, type PredictRequest, type PredictResponse } from "../interfaces/backend";
 import { BACKEND_URL } from "../config";
 import type { DirectionType } from "../interfaces/enum-types";
+import DelayModal from "./DelayModal";
 
 function ParamInput() {
   // setting initial states for inputs
@@ -108,6 +109,9 @@ function ParamInput() {
       <button className="delay-submit enforce-font" onClick={handleSeeDelay} disabled={isFetching}>
         {isFetching ? "Loading..." : "See delay"}
       </button>
+
+      {/* delay info modal */}
+      {predData && <DelayModal prediction={predData} closeModal={() => setPredData(undefined)} />}
 
     </div>
   </div>)
