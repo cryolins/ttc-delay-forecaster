@@ -14,20 +14,22 @@ print(feature_cols)
 joblib.dump(feature_cols, "feature_cols.pkl")
 
 param_grid = {
-    "max_depth": [3, 4, 5, 6, 7],
+    "n_estimators": [200, 300, 400, 500],
+    "max_depth": [3, 5, 7],
     "learning_rate": [0.03, 0.05, 0.075, 0.1],
     "subsample": [0.6, 0.7, 0.8, 0.9],
     "colsample_bytree": [0.6, 0.7, 0.8, 0.9],
     "min_child_weight": [1, 3, 5, 7],
-    "gamma":  [0, 0.1, 0.2, 0.5]
+    "gamma":  [0, 0.1, 0.2, 0.5],
+    "max_cat_to_onehot": [8, 16]
 }
 
 tscv = TimeSeriesSplit(n_splits=5) # time series cross validation
 
 search = RandomizedSearchCV(
     estimator=XGBRegressor(
-        n_estimators=350,
         random_state=42, 
+        enable_categorical=True
     ),
     param_distributions=param_grid,
     n_iter=150,
@@ -42,15 +44,17 @@ search.fit(X_train, y_train, verbose=0)
 print("Best parameters:")
 print(search.best_params_.items())
 print(search.best_score_)
+del search.best_params_["n_estimators"]
 
 # retraining with best
 best_xgb = XGBRegressor(
     **search.best_params_, # use those tuned params
-    n_estimators=800,
+    n_estimators=1000,
     early_stopping_rounds=50,
     random_state=42, 
     n_jobs=-1, 
-    verbosity=1
+    verbosity=1,
+    enable_categorical=True
 )
 
 best_xgb.fit(
